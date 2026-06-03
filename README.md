@@ -15,6 +15,7 @@ composer require coinify/magento2-payment
 bin/magento module:enable Coinify_Payment
 bin/magento setup:upgrade
 bin/magento setup:di:compile
+bin/magento setup:static-content:deploy -f
 bin/magento cache:flush
 ```
 
@@ -73,6 +74,7 @@ Then install:
 composer require coinify/magento2-payment
 php -d memory_limit=512M bin/magento setup:upgrade
 php -d memory_limit=512M bin/magento setup:di:compile
+php -d memory_limit=512M bin/magento setup:static-content:deploy -f en_US
 php -d memory_limit=512M bin/magento cache:flush
 ```
 
