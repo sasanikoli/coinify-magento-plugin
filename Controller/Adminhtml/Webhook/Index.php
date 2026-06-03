@@ -46,6 +46,7 @@ class Index extends Action
                 . '<td>' . htmlspecialchars($log['payment_intent_id'] ?? '') . '</td>'
                 . '<td>' . htmlspecialchars($log['created_at'] ?? '') . '</td>'
                 . '<td style="word-break:break-all;font-size:11px;max-width:400px">' . htmlspecialchars($log['payload'] ?? '') . '</td>'
+                . '<td style="word-break:break-all;font-size:11px;max-width:300px">' . htmlspecialchars($log['headers'] ?? '') . '</td>'
                 . '</tr>';
         }
 
@@ -53,7 +54,7 @@ class Index extends Action
         $body = $count > 0
             ? '<p>' . $count . ' log(s) found.</p>'
               . '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%">'
-              . '<thead><tr><th>ID</th><th>Event</th><th>Order ID</th><th>Payment Intent ID</th><th>Received</th><th>Payload</th></tr></thead>'
+              . '<thead><tr><th>ID</th><th>Event</th><th>Order ID</th><th>Payment Intent ID</th><th>Received</th><th>Payload</th><th>Headers</th></tr></thead>'
               . '<tbody>' . $rows . '</tbody></table>'
             : '<p>No webhook logs found in the database.</p>';
 
