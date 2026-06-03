@@ -1,0 +1,112 @@
+<?php
+/** @var $block \Coinify\Payment\Block\Adminhtml\Sales\Order\View\Coinify */
+$order = $block->getOrder();
+$intents = $block->getIntents();
+$logs = $block->getWebhookLogs();
+$refunds = $block->getRefunds();
+?>
+<div class="admin__page-section">
+    <div class="title"><strong>Coinify Payments</strong></div>
+    <div class="box">
+
+        <h4>Payment Intents</h4>
+        <?php if (empty($intents)): ?>
+            <p>No Coinify payment intents found for this order.</p>
+        <?php else: ?>
+            <table class="data-grid">
+                <thead>
+                    <tr>
+                        <th>Intent ID</th>
+                        <th>State</th>
+                        <th>State Reason</th>
+                        <th>Payment Window URL</th>
+                        <th>Created</th>
+                        <th>Refund</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($intents as $intent): ?>
+                    <tr>
+                        <td><?= $block->escapeHtml($intent->getData('payment_intent_id')) ?></td>
+                        <td><?= $block->escapeHtml($intent->getData('state')) ?></td>
+                        <td><?= $block->escapeHtml($intent->getData('state_reason')) ?></td>
+                        <td>
+                            <?php $url = $intent->getData('payment_window_url'); if ($url): ?>
+                                <a href="<?= $block->escapeUrl($url) ?>" target="_blank">Open</a>
+                            <?php endif; ?>
+                        </td>
+                        <td><?= $block->escapeHtml($intent->getData('created_at')) ?></td>
+                        <td>
+                            <form action="<?= $block->escapeUrl($block->getUrl('coinify/order/refund')) ?>" method="post" style="display:inline-flex;gap:4px;align-items:center;">
+                                <input name="form_key" type="hidden" value="<?= $block->escapeHtml($block->getFormKey()) ?>" />
+                                <input type="hidden" name="order_id" value="<?= $block->escapeHtml($order->getIncrementId()) ?>" />
+                                <input type="hidden" name="intent_id" value="<?= $block->escapeHtml($intent->getData('payment_intent_id')) ?>" />
+                                <input type="number" name="amount" placeholder="Amount" step="0.01" min="0.01" style="width:90px;" required />
+                                <span><?= $block->escapeHtml($order->getOrderCurrencyCode()) ?></span>
+                                <button type="submit" class="action-default scalable">Refund</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <h4>Webhook Logs</h4>
+        <?php if (empty($logs)): ?>
+            <p>No webhook logs for this order.</p>
+        <?php else: ?>
+            <table class="data-grid">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Payment Intent</th>
+                        <th>Payload</th>
+                        <th>Received</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($logs as $log): ?>
+                    <tr>
+                        <td><?= $block->escapeHtml($log->getData('event')) ?></td>
+                        <td><?= $block->escapeHtml($log->getData('payment_intent_id')) ?></td>
+                        <td><pre style="max-height:200px;overflow:auto;font-size:11px;white-space:pre-wrap;word-break:break-all;max-width:600px;"><?= $block->escapeHtml($log->getData('payload')) ?></pre></td>
+                        <td><?= $block->escapeHtml($log->getData('created_at')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <h4>Refunds</h4>
+        <?php if (empty($refunds)): ?>
+            <p>No refunds initiated for this order.</p>
+        <?php else: ?>
+            <table class="data-grid">
+                <thead>
+                    <tr>
+                        <th>Refund ID</th>
+                        <th>Payment Intent</th>
+                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>State</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($refunds as $r): ?>
+                    <tr>
+                        <td><?= $block->escapeHtml($r->getData('refund_id')) ?></td>
+                        <td><?= $block->escapeHtml($r->getData('payment_intent_id')) ?></td>
+                        <td><?= $block->escapeHtml($r->getData('amount')) ?></td>
+                        <td><?= $block->escapeHtml($r->getData('currency')) ?></td>
+                        <td><?= $block->escapeHtml($r->getData('state')) ?></td>
+                        <td><?= $block->escapeHtml($r->getData('created_at')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+    </div>
+</div>

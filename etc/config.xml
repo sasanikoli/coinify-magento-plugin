@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/config.xsd">
+    <default>
+        <payment>
+            <coinify>
+                <active>0</active>
+                <model>Coinify\Payment\Model\Payment\Method\Coinify</model>
+                <title>Pay with Crypto</title>
+                <environment>sandbox</environment>
+                <api_key></api_key>
+                <webhook_secret></webhook_secret>
+                <auto_credit_memo>1</auto_credit_memo>
+            </coinify>
+        </payment>
+    </default>
+</config>

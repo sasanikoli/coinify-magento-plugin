@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/system_file.xsd">
+    <system>
+        <section id="payment" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="coinify" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Coinify</label>
+                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Payment Method Title</label>
+                    <comment>Displayed to customers in checkout.</comment>
+                </field>
+                <field id="environment" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Environment</label>
+                    <source_model>Coinify\Payment\Model\Config\Source\Environment</source_model>
+                </field>
+                <field id="api_key" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API Key</label>
+                </field>
+                <field id="webhook_url" translate="label" type="label" sortOrder="55" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Webhook URL</label>
+                    <frontend_model>Coinify\Payment\Block\Adminhtml\System\WebhookUrl</frontend_model>
+                </field>
+                <field id="webhook_secret" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Webhook Secret</label>
+                    <comment>Shared secret used to validate Coinify webhook signatures.</comment>
+                </field>
+                <field id="auto_credit_memo" translate="label" type="select" sortOrder="65" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Auto-create Credit Memo on Refund</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Automatically create an offline Credit Memo in Magento when Coinify confirms a refund via webhook.</comment>
+                </field>
+                <field id="dashboard_links" translate="label" type="label" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Coinify Dashboard Links</label>
+                    <frontend_model>Coinify\Payment\Block\Adminhtml\System\DashboardLinks</frontend_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
