@@ -1,20 +1,31 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
     <argument name="data" xsi:type="array">
         <item name="js_config" xsi:type="array">
             <item name="provider" xsi:type="string">coinify_webhook_log_listing.coinify_webhook_log_listing_data_source</item>
-            <item name="deps" xsi:type="string">coinify_webhook_log_listing.coinify_webhook_log_listing_data_source</item>
         </item>
-        <item name="spinner" xsi:type="string">coinify_webhook_log_columns</item>
     </argument>
-    <dataSource name="coinify_webhook_log_listing_data_source">
-        <argument name="dataProvider" xsi:type="configurableObject">
-            <argument name="class" xsi:type="string">Coinify\Payment\Ui\Component\DataProvider\WebhookLog</argument>
-            <argument name="name" xsi:type="string">coinify_webhook_log_listing_data_source</argument>
-            <argument name="primaryFieldName" xsi:type="string">entity_id</argument>
-            <argument name="requestFieldName" xsi:type="string">entity_id</argument>
-        </argument>
+    <settings>
+        <spinner>coinify_webhook_log_columns</spinner>
+        <deps>
+            <dep>coinify_webhook_log_listing.coinify_webhook_log_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="coinify_webhook_log_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>Coinify_Payment::webhook_logs</aclResource>
+        <dataProvider class="Coinify\Payment\Ui\Component\DataProvider\WebhookLog" name="coinify_webhook_log_listing_data_source">
+            <settings>
+                <requestFieldName>entity_id</requestFieldName>
+                <primaryFieldName>entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
     </dataSource>
+    <listingToolbar name="listing_top">
+        <paging name="listing_paging"/>
+    </listingToolbar>
     <columns name="coinify_webhook_log_columns">
         <column name="entity_id">
             <settings>
@@ -24,7 +35,7 @@
         </column>
         <column name="event">
             <settings>
-                <filter>select</filter>
+                <filter>text</filter>
                 <label translate="true">Event</label>
             </settings>
         </column>
@@ -40,21 +51,12 @@
                 <label translate="true">Order ID</label>
             </settings>
         </column>
-        <column name="created_at">
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
             <settings>
                 <filter>dateRange</filter>
                 <label translate="true">Received</label>
-            </settings>
-        </column>
-        <column name="payload">
-            <settings>
-                <filter>text</filter>
-                <label translate="true">Payload</label>
-                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
+                <dataType>date</dataType>
             </settings>
         </column>
     </columns>
-    <listingToolbar name="listing_top">
-        <paging name="listing_paging"/>
-    </listingToolbar>
 </listing>
