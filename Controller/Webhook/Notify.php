@@ -116,7 +116,7 @@ class Notify extends Action implements CsrfAwareActionInterface
                 $log->setData([
                     'event' => $payload['event'] ?? null,
                     'payload' => $body,
-                    'headers' => json_encode($this->getRequest()->getHeaders() ?: []),
+                    'headers' => json_encode($this->getRequest()->getHeaders()->toArray()),
                     'payment_intent_id' => $context['id'] ?? null,
                     'order_id' => $context['orderId'] ?? null,
                 ]);
