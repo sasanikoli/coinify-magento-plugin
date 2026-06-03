@@ -3,8 +3,7 @@
     <body>
         <referenceContainer name="content">
             <block class="Coinify\Payment\Block\Adminhtml\Webhook\Logs"
-                   name="coinify.webhook.logs"
-                   template="Coinify_Payment::webhook/logs.phtml"/>
+                   name="coinify.webhook.logs"/>
         </referenceContainer>
     </body>
 </page>
