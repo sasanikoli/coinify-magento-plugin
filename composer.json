@@ -3,7 +3,6 @@
     "description": "Coinify cryptocurrency payment gateway for Magento 2",
     "type": "magento2-module",
     "license": "MIT",
-    "version": "1.0.0",
     "require": {
         "php": ">=7.4.0",
         "magento/framework": ">=103.0",
