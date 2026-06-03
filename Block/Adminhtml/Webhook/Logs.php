@@ -1,13 +1,14 @@
 <?php
 namespace Coinify\Payment\Block\Adminhtml\Webhook;
 
-use Magento\Framework\View\Element\AbstractBlock;
-use Magento\Framework\View\Element\Context;
+use Magento\Backend\Block\Template;
+use Magento\Backend\Block\Template\Context;
 use Coinify\Payment\Model\ResourceModel\WebhookLog\CollectionFactory;
 
-class Logs extends AbstractBlock
+class Logs extends Template
 {
-    private CollectionFactory $collectionFactory;
+    /** @var CollectionFactory */
+    private $collectionFactory;
 
     public function __construct(Context $context, CollectionFactory $collectionFactory, array $data = [])
     {
@@ -26,7 +27,7 @@ class Logs extends AbstractBlock
             $logs[] = $item->getData();
         }
 
-        $e = fn($s) => $this->escapeHtml((string) $s);
+        $e = function ($s) { return $this->escapeHtml((string) $s); };
 
         $html = '<div style="padding:20px">';
 
