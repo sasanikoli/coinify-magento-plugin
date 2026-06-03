@@ -87,12 +87,15 @@ class Notify extends Action implements CsrfAwareActionInterface
             'match' => $computed && $sigHeader && hash_equals($computed, strtolower($sigHeader)) ? 'YES' : 'NO',
         ]);
 
-        if ($secret && $sigHeader) {
-            if (!hash_equals($computed, strtolower($sigHeader))) {
-                $this->logger->warning('Coinify webhook signature mismatch — processing anyway for now', [
+        if ($secret) {
+            if (!$sigHeader || !hash_equals($computed, strtolower($sigHeader))) {
+                $this->logger->warning('Coinify webhook rejected: invalid or missing signature', [
                     'computed' => $computed,
                     'header' => $sigHeader,
                 ]);
+                $result->setHttpResponseCode(400);
+                $result->setContents('invalid signature');
+                return $result;
             }
         }
 
