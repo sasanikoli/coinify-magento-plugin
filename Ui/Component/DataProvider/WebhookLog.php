@@ -22,9 +22,13 @@ class WebhookLog extends AbstractDataProvider
     public function getData()
     {
         $collection = $this->getCollection();
+        $items = [];
+        foreach ($collection->getItems() as $item) {
+            $items[] = $item->getData();
+        }
         return [
             'totalRecords' => $collection->getSize(),
-            'items' => array_values($collection->toArray()['items'] ?? []),
+            'items' => $items,
         ];
     }
 }
