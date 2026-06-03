@@ -12,12 +12,14 @@ Accept cryptocurrency payments in your Magento 2 store via [Coinify](https://www
 
 ```bash
 composer require coinify/magento2-payment
-bin/magento module:enable Coinify_Payment
-bin/magento setup:upgrade
-bin/magento setup:di:compile
-bin/magento setup:static-content:deploy -f
-bin/magento cache:flush
+php -d memory_limit=512M bin/magento module:enable Coinify_Payment
+php -d memory_limit=512M bin/magento setup:upgrade
+php -d memory_limit=512M bin/magento setup:di:compile
+php -d memory_limit=512M bin/magento setup:static-content:deploy -f
+php -d memory_limit=512M bin/magento cache:flush
 ```
+
+> **Note:** The `-d memory_limit=512M` flag prevents `setup:di:compile` from failing on servers with a low default PHP memory limit. The `-f` flag on `setup:static-content:deploy` is required when Magento is running in production mode.
 
 ## Configuration
 
