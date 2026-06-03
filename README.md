@@ -51,6 +51,33 @@ The URL is also displayed in the Magento admin under **Stores → Configuration 
 
 Initiate refunds from the order view in Magento admin under the **Coinify Payments** section. Coinify will email the customer to collect their wallet address. Once the crypto transfer completes, Coinify sends a `payment-intent.refund.completed` webhook which updates the refund status and (if enabled) automatically creates a Credit Memo.
 
+## Development
+
+To work on this module locally, you need a running Magento 2.4.x instance. The recommended approach is to install the module via a Composer path repository so edits are reflected immediately without copying files.
+
+In your Magento root `composer.json`, add:
+
+```json
+"repositories": [
+    {
+        "type": "path",
+        "url": "../coinify-magento-plugin",
+        "options": {"symlink": true}
+    }
+]
+```
+
+Then install:
+
+```bash
+composer require coinify/magento2-payment
+php -d memory_limit=512M bin/magento setup:upgrade
+php -d memory_limit=512M bin/magento setup:di:compile
+php -d memory_limit=512M bin/magento cache:flush
+```
+
+After any PHP file changes, re-run `setup:di:compile` and `cache:flush`. For template-only changes, `cache:flush` is sufficient.
+
 ## License
 
 MIT
