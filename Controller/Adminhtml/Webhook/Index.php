@@ -22,7 +22,7 @@ class Index extends Action
         $resultPage = $this->resultPageFactory->create();
         try {
             $resultPage->setActiveMenu('Coinify_Payment::webhook_logs');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // setActiveMenu is cosmetic only; ignore if menu item not yet compiled
         }
         $resultPage->getConfig()->getTitle()->prepend(__('Coinify Webhook Logs'));
