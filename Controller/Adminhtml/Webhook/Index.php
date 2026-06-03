@@ -20,7 +20,11 @@ class Index extends Action
     public function execute()
     {
         $resultPage = $this->resultPageFactory->create();
-        $resultPage->setActiveMenu('Coinify_Payment::webhook_logs');
+        try {
+            $resultPage->setActiveMenu('Coinify_Payment::webhook_logs');
+        } catch (\Exception $e) {
+            // setActiveMenu is cosmetic only; ignore if menu item not yet compiled
+        }
         $resultPage->getConfig()->getTitle()->prepend(__('Coinify Webhook Logs'));
         return $resultPage;
     }
