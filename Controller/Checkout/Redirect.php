@@ -75,6 +75,22 @@ class Redirect extends Action
                 $this->logger->error('Coinify: failed saving payment intent: ' . $e->getMessage());
             }
 
+            // Fetch full intent state if the create response did not include it
+            $intentId = $response['id'] ?? null;
+            if ($intentId && empty($response['state'])) {
+                try {
+                    $fetched = $this->client->getPaymentIntent($intentId);
+                    if (!empty($fetched['state'])) {
+                        $intent->setData('state', $fetched['state']);
+                        $intent->setData('state_reason', $fetched['stateReason'] ?? null);
+                        $intent->setData('response_raw', json_encode($fetched));
+                        $intent->save();
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->warning('Coinify: failed fetching payment intent state: ' . $e->getMessage());
+                }
+            }
+
             if (!empty($response['paymentWindowUrl'])) {
                 $url = $response['paymentWindowUrl'];
                 if (!$this->isAllowedPaymentWindowUrl($url)) {

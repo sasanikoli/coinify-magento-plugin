@@ -23,6 +23,12 @@ class Client
         return $this->request('POST', '/payment-intents', $payload);
     }
 
+    public function getPaymentIntent(string $paymentIntentId): array
+    {
+        $uri = '/payment-intents/' . urlencode($paymentIntentId);
+        return $this->request('GET', $uri);
+    }
+
     public function createRefund(string $paymentIntentId, array $payload): array
     {
         $uri = '/payment-intents/' . urlencode($paymentIntentId) . '/refunds';
@@ -41,8 +47,11 @@ class Client
             $this->curl->addHeader('X-API-KEY', $apiKey);
         }
 
-        // Only POST implemented for now
-        $this->curl->post($url, json_encode($payload));
+        if ($method === 'GET') {
+            $this->curl->get($url);
+        } else {
+            $this->curl->post($url, json_encode($payload));
+        }
 
         $response = $this->curl->getBody();
         return $response ? json_decode($response, true) : [];
