@@ -16,8 +16,9 @@
                     <label>Environment</label>
                     <source_model>Coinify\Payment\Model\Config\Source\Environment</source_model>
                 </field>
-                <field id="api_key" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="api_key" translate="label" type="obscure" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Key</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
                 <field id="webhook_url" translate="label" type="label" sortOrder="55" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Webhook URL</label>
@@ -25,7 +26,8 @@
                 </field>
                 <field id="webhook_secret" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Webhook Secret</label>
-                    <comment>Shared secret used to validate Coinify webhook signatures.</comment>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <comment>Shared secret used to validate Coinify webhook signatures. Payments won't be accepted if the secret is not set.</comment>
                 </field>
                 <field id="auto_credit_memo" translate="label" type="select" sortOrder="65" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Auto-create Credit Memo on Refund</label>

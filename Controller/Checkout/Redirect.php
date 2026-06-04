@@ -76,9 +76,14 @@ class Redirect extends Action
             }
 
             if (!empty($response['paymentWindowUrl'])) {
-                $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-                $resultRedirect->setUrl($response['paymentWindowUrl']);
-                return $resultRedirect;
+                $url = $response['paymentWindowUrl'];
+                if (!$this->isAllowedPaymentWindowUrl($url)) {
+                    $this->logger->error('Coinify: paymentWindowUrl rejected — domain not in allowlist', ['url' => $url]);
+                } else {
+                    $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+                    $resultRedirect->setUrl($url);
+                    return $resultRedirect;
+                }
             }
 
             $this->logger->error('Coinify createPaymentIntent missing paymentWindowUrl', ['response' => $response]);
@@ -89,5 +94,19 @@ class Redirect extends Action
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         $resultRedirect->setPath('checkout/cart');
         return $resultRedirect;
+    }
+
+    private function isAllowedPaymentWindowUrl(string $url): bool
+    {
+        $allowedPrefixes = [
+            'https://checkout.coinify.com/',
+            'https://checkout.sandbox.coinify.com/',
+        ];
+        foreach ($allowedPrefixes as $prefix) {
+            if (str_starts_with($url, $prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

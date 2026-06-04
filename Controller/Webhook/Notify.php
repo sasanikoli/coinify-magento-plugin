@@ -82,21 +82,24 @@ class Notify extends Action implements CsrfAwareActionInterface
         $computed = $secret ? hash_hmac('sha256', $body, $secret) : null;
         $this->logger->debug('Coinify webhook received', [
             'body_length' => strlen($body),
-            'computed_hmac' => $computed,
-            'received_sig' => $sigHeader,
-            'match' => $computed && $sigHeader && hash_equals($computed, strtolower($sigHeader)) ? 'YES' : 'NO',
+            'signature_match' => $computed && $sigHeader && hash_equals($computed, strtolower($sigHeader)) ? 'YES' : 'NO',
         ]);
 
-        if ($secret) {
-            if (!$sigHeader || !hash_equals($computed, strtolower($sigHeader))) {
-                $this->logger->warning('Coinify webhook rejected: invalid or missing signature', [
-                    'computed' => $computed,
-                    'header' => $sigHeader,
-                ]);
-                $result->setHttpResponseCode(400);
-                $result->setContents('invalid signature');
-                return $result;
-            }
+        if (!$secret) {
+            $this->logger->error('Coinify webhook rejected: webhook_secret is not configured. All webhooks are blocked until a secret is set in the payment configuration.');
+            $result->setHttpResponseCode(400);
+            $result->setContents('webhook secret not configured');
+            return $result;
+        }
+
+        if (!$sigHeader || !hash_equals($computed, strtolower($sigHeader))) {
+            $this->logger->warning('Coinify webhook rejected: invalid or missing signature', [
+                'computed' => $computed,
+                'header' => $sigHeader,
+            ]);
+            $result->setHttpResponseCode(400);
+            $result->setContents('invalid signature');
+            return $result;
         }
 
         $payload = json_decode($body, true);
@@ -133,6 +136,23 @@ class Notify extends Action implements CsrfAwareActionInterface
             }
 
             $intent = $collection->getFirstItem();
+
+            // Cross-validate: if we found an intent by its ID, the orderId in the payload must match
+            // what we have on record. Prevents a forged webhook using a real intent ID to complete
+            // a different, unrelated order.
+            if ($intent && $intent->getId() && !empty($context['id']) && !empty($context['orderId'])) {
+                if ($intent->getData('order_id') !== $context['orderId']) {
+                    $this->logger->warning('Coinify webhook rejected: payment_intent_id does not match orderId', [
+                        'intent_id'       => $context['id'],
+                        'intent_order_id' => $intent->getData('order_id'),
+                        'payload_order_id' => $context['orderId'],
+                    ]);
+                    $result->setHttpResponseCode(400);
+                    $result->setContents('intent/order mismatch');
+                    return $result;
+                }
+            }
+
             if ($intent && $intent->getId()) {
                 $intent->setData('state', $context['state'] ?? null);
                 $intent->setData('state_reason', $context['stateReason'] ?? null);

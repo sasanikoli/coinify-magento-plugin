@@ -68,6 +68,16 @@ class Refund extends Action
                 return $this->_redirect($this->_redirect->getRefererUrl());
             }
 
+            if ($intent->getData('order_id') !== $orderId) {
+                $this->logger->warning('Coinify refund rejected: intent does not belong to order', [
+                    'intent_id'        => $intentId,
+                    'intent_order_id'  => $intent->getData('order_id'),
+                    'submitted_order_id' => $orderId,
+                ]);
+                $this->messageManager->addErrorMessage(__('Payment intent does not belong to this order.'));
+                return $this->_redirect($this->_redirect->getRefererUrl());
+            }
+
             $response = $this->refundProcessor->createRefund($intentId, $orderId, $amount, $order->getOrderCurrencyCode());
 
             if (isset($response['errorCode'])) {
