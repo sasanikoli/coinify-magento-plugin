@@ -23,7 +23,7 @@ php -d memory_limit=512M bin/magento cache:flush
 
 ## Configuration
 
-Navigate to **Stores → Configuration → Sales → Payment Methods → Coinify**.
+Navigate to **Stores → Configuration → Payment Methods → Coinify**.
 
 | Field | Description |
 |-------|-------------|
@@ -31,24 +31,24 @@ Navigate to **Stores → Configuration → Sales → Payment Methods → Coinify
 | Payment Method Title | Label shown to customers at checkout |
 | Environment | `sandbox` for testing, `production` for live payments |
 | API Key | Your Coinify API key |
-| Webhook Secret | Shared secret for webhook signature validation |
+| Webhook Secret | Shared secret for webhook signature validation — **required** |
 | Auto-create Credit Memo on Refund | Automatically create an offline Credit Memo when Coinify confirms a refund |
+
+> **Important:** The Webhook Secret must be set before accepting payments. Without it, all incoming webhooks will be rejected and order statuses will not update. A warning banner is displayed in the Magento admin until the secret is configured.
 
 ## Webhook Setup
 
-Set your webhook URL in the Coinify dashboard to:
-
-```
-https://your-store.com/coinify/webhook/notify
-```
-
-The URL is also displayed in the Magento admin under **Stores → Configuration → Sales → Payment Methods → Coinify → Webhook URL**.
+1. Copy the **Webhook URL** shown in the Coinify configuration page (e.g. `https://your-store.com/coinify/webhook/notify`)
+2. Paste it into your Coinify dashboard under **Webhook settings**
+3. Copy the generated webhook secret from the Coinify dashboard back into the **Webhook Secret** field in Magento and save
 
 ## Sandbox Testing
 
 1. Set Environment to `sandbox` in configuration
 2. Use your Coinify sandbox API key from [app.sandbox.coinify.com](https://app.sandbox.coinify.com)
-3. Webhooks from the sandbox dashboard can be replayed for testing
+3. Set the webhook URL and secret in the sandbox dashboard under **Settings → Webhooks**
+4. Place a test order and complete payment in the Coinify sandbox window
+5. Order status will update to **Processing** and an invoice will be created automatically once the webhook is received
 
 ## Refunds
 
