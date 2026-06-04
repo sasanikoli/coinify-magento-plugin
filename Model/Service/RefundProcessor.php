@@ -5,6 +5,14 @@ use Coinify\Payment\Model\Api\Client as CoinifyClient;
 use Coinify\Payment\Model\RefundFactory;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Creates merchant refunds via the Coinify API and persists the refund record.
+ *
+ * Note: the Coinify refund flow is asynchronous. This service initiates the
+ * refund and saves it with state 'initiated'. The actual fund transfer happens
+ * after the customer provides their wallet address via email. A
+ * payment-intent.refund.completed webhook updates the state to 'completed'.
+ */
 class RefundProcessor
 {
     private CoinifyClient $client;
@@ -19,12 +27,9 @@ class RefundProcessor
     }
 
     /**
-     * Create a merchant refund for a payment intent.
-     * @param string $paymentIntentId
-     * @param string $orderIncrementId
-     * @param float $amount
-     * @param string|null $currency
-     * @return array refund response
+     * Calls POST /payment-intents/{id}/refunds, then extracts the new refund
+     * entry from the merchantRefunds array in the response and saves it locally.
+     * Returns the full API response so the caller can inspect error codes.
      */
     public function createRefund(string $paymentIntentId, string $orderIncrementId, float $amount, ?string $currency = null): array
     {
@@ -35,7 +40,8 @@ class RefundProcessor
         try {
             $response = $this->client->createRefund($paymentIntentId, $payload);
 
-            // The API returns the full payment intent object; the new refund is the last item in merchantRefunds
+            // The API returns the updated payment intent object. The newly created
+            // refund is appended as the last item in merchantRefunds.
             $merchantRefunds = $response['merchantRefunds'] ?? [];
             $lastRefund = !empty($merchantRefunds) ? end($merchantRefunds) : null;
             $refundId = $lastRefund['id'] ?? null;

@@ -4,6 +4,12 @@ namespace Coinify\Payment\Model\Api;
 use Magento\Framework\HTTP\Client\Curl;
 use Coinify\Payment\Model\Config as CoinifyConfig;
 
+/**
+ * HTTP client for the Coinify REST API.
+ *
+ * Selects the sandbox or production base URL based on the module's environment
+ * setting and injects the API key on every request via the X-API-KEY header.
+ */
 class Client
 {
     private const SANDBOX_BASE_URL = 'https://api.payment.sandbox.coinify.com/v1';
@@ -18,23 +24,30 @@ class Client
         $this->config = $config;
     }
 
+    /** Creates a new payment intent and returns the full API response array. */
     public function createPaymentIntent(array $payload): array
     {
         return $this->request('POST', '/payment-intents', $payload);
     }
 
+    /** Fetches the current state of an existing payment intent by its ID. */
     public function getPaymentIntent(string $paymentIntentId): array
     {
         $uri = '/payment-intents/' . urlencode($paymentIntentId);
         return $this->request('GET', $uri);
     }
 
+    /** Initiates a merchant refund for a completed payment intent. */
     public function createRefund(string $paymentIntentId, array $payload): array
     {
         $uri = '/payment-intents/' . urlencode($paymentIntentId) . '/refunds';
         return $this->request('POST', $uri, $payload);
     }
 
+    /**
+     * Executes an API request and returns the decoded JSON response.
+     * GET requests send no body; all other methods POST a JSON-encoded payload.
+     */
     private function request(string $method, string $uri, array $payload = []): array
     {
         $environment = $this->config->getEnvironment();

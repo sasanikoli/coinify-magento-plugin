@@ -4,6 +4,13 @@ namespace Coinify\Payment\Model\Ui;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Coinify\Payment\Model\Config as CoinifyConfig;
 
+/**
+ * Injects Coinify configuration into the frontend checkout JS.
+ *
+ * The data returned here is merged into window.checkoutConfig.payment.coinify
+ * and consumed by the payment renderer (coinify.js), which reads redirectUrl
+ * to forward the customer after order placement.
+ */
 class ConfigProvider implements ConfigProviderInterface
 {
     public const CODE = 'coinify';

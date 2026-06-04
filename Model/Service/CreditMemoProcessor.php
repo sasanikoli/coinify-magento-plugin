@@ -10,6 +10,19 @@ use Magento\Sales\Model\OrderFactory;
 use Magento\Framework\DB\TransactionFactory;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Automatically creates a Magento Credit Memo when a Coinify refund completes.
+ *
+ * Supports both full and partial refunds:
+ *  - Full refund: credit memo covers all items + shipping.
+ *  - Partial refund: credit memo uses a positive adjustment equal to the
+ *    refund amount, with zero item quantities and no shipping.
+ *
+ * Includes a recovery path for orders that were paid via Coinify but somehow
+ * have no invoice (e.g. created by an older version of the plugin). Without an
+ * invoice, Magento's canCreditmemo() returns false, so a missing invoice is
+ * created first before the credit memo attempt.
+ */
 class CreditMemoProcessor
 {
     private CreditmemoFactory $creditmemoFactory;
@@ -37,9 +50,7 @@ class CreditMemoProcessor
 
     public function createForRefund(Order $order, float $refundAmount): void
     {
-        // Recovery path: if the order was paid via Coinify but invoice creation was
-        // missed (e.g. old code or transient failure), create the invoice now so that
-        // total_paid is set and canCreditmemo() can pass.
+        // Recovery path: create a missing invoice before attempting the credit memo.
         if (!$order->getBaseTotalInvoiced() && $order->canInvoice()) {
             $this->logger->warning('Coinify: no invoice found for paid order ' . $order->getIncrementId() . ' — creating now before credit memo');
             $this->createMissingInvoice($order);
@@ -67,6 +78,8 @@ class CreditMemoProcessor
                     'shipping_amount' => $invoice->getShippingAmount(),
                 ]);
             } else {
+                // For partial refunds, set all item quantities to zero and use
+                // adjustment_positive so the credit memo reflects only the cash amount.
                 $qtys = [];
                 foreach ($invoice->getAllItems() as $item) {
                     $qtys[$item->getOrderItemId()] = 0;

@@ -9,6 +9,14 @@ use Coinify\Payment\Model\ResourceModel\PaymentIntent\CollectionFactory as Inten
 use Coinify\Payment\Model\ResourceModel\WebhookLog\CollectionFactory as WebhookCollectionFactory;
 use Coinify\Payment\Model\ResourceModel\Refund\CollectionFactory as RefundCollectionFactory;
 
+/**
+ * Provides data for the "Coinify Payments" section injected into the admin order view.
+ *
+ * Renders three sub-sections via order/coinify.phtml:
+ *  - Payment intents (with per-intent refund form)
+ *  - Webhook log entries for the order
+ *  - Refund records
+ */
 class Coinify extends Template
 {
     private IntentCollectionFactory $intentCollectionFactory;
@@ -35,11 +43,13 @@ class Coinify extends Template
         $this->registry = $registry;
     }
 
+    /** Returns the order currently being viewed, sourced from Magento's registry. */
     public function getOrder()
     {
         return $this->registry->registry('current_order');
     }
 
+    /** Returns all Coinify payment intents associated with this order. */
     public function getIntents()
     {
         $order = $this->getOrder();
@@ -51,6 +61,7 @@ class Coinify extends Template
         return $collection->getItems();
     }
 
+    /** Returns webhook log entries for this order, newest first. */
     public function getWebhookLogs()
     {
         $order = $this->getOrder();
@@ -63,6 +74,7 @@ class Coinify extends Template
         return $collection->getItems();
     }
 
+    /** Returns refund records for this order, newest first. */
     public function getRefunds()
     {
         $order = $this->getOrder();

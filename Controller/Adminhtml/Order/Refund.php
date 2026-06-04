@@ -9,6 +9,20 @@ use Coinify\Payment\Model\ResourceModel\PaymentIntent\CollectionFactory as Inten
 use Coinify\Payment\Model\Service\RefundProcessor;
 use Magento\Framework\Data\Form\FormKey\Validator as FormKeyValidator;
 
+/**
+ * Handles the admin refund form submission from the order detail page.
+ *
+ * Security checks applied before any API call:
+ *  1. Magento form key (CSRF token) validation.
+ *  2. IDOR guard — verifies the submitted payment intent belongs to the
+ *     submitted order ID, preventing one order's intent from being used
+ *     to trigger a refund against a different order.
+ *
+ * On success, delegates to RefundProcessor which calls the Coinify API
+ * and saves the refund record. The actual fund transfer is asynchronous:
+ * Coinify emails the customer for their wallet address and fires a
+ * payment-intent.refund.completed webhook when the transfer is done.
+ */
 class Refund extends Action
 {
     const ADMIN_RESOURCE = 'Coinify_Payment::refunds';
@@ -68,6 +82,9 @@ class Refund extends Action
                 return $this->_redirect($this->_redirect->getRefererUrl());
             }
 
+            // IDOR guard: ensure the intent record's order_id matches what was
+            // submitted. Without this check, a tampered form could refund any
+            // intent regardless of which order is being viewed.
             if ($intent->getData('order_id') !== $orderId) {
                 $this->logger->warning('Coinify refund rejected: intent does not belong to order', [
                     'intent_id'        => $intentId,

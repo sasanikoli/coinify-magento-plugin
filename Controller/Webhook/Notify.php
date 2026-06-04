@@ -18,6 +18,24 @@ use Coinify\Payment\Model\WebhookLogFactory;
 use Coinify\Payment\Model\ResourceModel\Refund\CollectionFactory as RefundCollectionFactory;
 use Coinify\Payment\Model\Service\CreditMemoProcessor;
 
+/**
+ * Receives and processes inbound Coinify webhook events.
+ *
+ * Security checks (in order):
+ *  1. Rejects with HTTP 400 if webhook_secret is not configured.
+ *  2. Validates the HMAC-SHA256 signature in X-Coinify-Webhook-Signature
+ *     using a timing-safe comparison to prevent timing attacks.
+ *  3. Cross-validates the payment_intent_id from the payload against the
+ *     order_id stored in the database to prevent IDOR-style forgery.
+ *
+ * Handled events:
+ *  - payment-intent.completed  → sets order to Processing, creates invoice
+ *  - payment-intent.failed     → cancels the order
+ *  - payment-intent.refund.completed → marks refund complete, optionally creates Credit Memo
+ *
+ * Implements CsrfAwareActionInterface to exempt this endpoint from Magento's
+ * built-in CSRF token check (webhooks are server-to-server, not form posts).
+ */
 class Notify extends Action implements CsrfAwareActionInterface
 {
     private LoggerInterface $logger;
@@ -71,6 +89,8 @@ class Notify extends Action implements CsrfAwareActionInterface
     {
         $result = $this->resultFactory->create(ResultFactory::TYPE_RAW);
 
+        // Use php://input as a fallback because Magento may consume the raw body
+        // before it reaches the controller in some server configurations.
         $body = $this->getRequest()->getContent();
         if (empty($body)) {
             $body = file_get_contents('php://input');
@@ -85,6 +105,8 @@ class Notify extends Action implements CsrfAwareActionInterface
             'signature_match' => $computed && $sigHeader && hash_equals($computed, strtolower($sigHeader)) ? 'YES' : 'NO',
         ]);
 
+        // Guard: reject all webhooks if no secret is configured. Without a secret
+        // there is no way to verify the request is genuinely from Coinify.
         if (!$secret) {
             $this->logger->error('Coinify webhook rejected: webhook_secret is not configured. All webhooks are blocked until a secret is set in the payment configuration.');
             $result->setHttpResponseCode(400);
@@ -92,6 +114,8 @@ class Notify extends Action implements CsrfAwareActionInterface
             return $result;
         }
 
+        // hash_equals() is used instead of === to prevent timing attacks that could
+        // allow an attacker to guess the secret one byte at a time.
         if (!$sigHeader || !hash_equals($computed, strtolower($sigHeader))) {
             $this->logger->warning('Coinify webhook rejected: invalid or missing signature', [
                 'computed' => $computed,
@@ -114,6 +138,7 @@ class Notify extends Action implements CsrfAwareActionInterface
         $context = $payload['context'] ?? [];
 
         try {
+            // Log every webhook to coinify_webhook_log for auditability.
             try {
                 $log = $this->webhookLogFactory->create();
                 $log->setData([
@@ -128,6 +153,8 @@ class Notify extends Action implements CsrfAwareActionInterface
                 $this->logger->warning('Coinify: failed saving webhook log: ' . $e->getMessage());
             }
 
+            // Look up the local payment intent record by intent ID first, then fall
+            // back to order ID if the intent ID is not present in the payload.
             $collection = $this->intentCollectionFactory->create();
             if (!empty($context['id'])) {
                 $collection->addFieldToFilter('payment_intent_id', $context['id']);
@@ -137,9 +164,9 @@ class Notify extends Action implements CsrfAwareActionInterface
 
             $intent = $collection->getFirstItem();
 
-            // Cross-validate: if we found an intent by its ID, the orderId in the payload must match
-            // what we have on record. Prevents a forged webhook using a real intent ID to complete
-            // a different, unrelated order.
+            // Cross-validation: if we found an intent by its ID, confirm the orderId
+            // in the payload matches what we have on record. This prevents a forged
+            // webhook from using a real intent ID to complete a different order.
             if ($intent && $intent->getId() && !empty($context['id']) && !empty($context['orderId'])) {
                 if ($intent->getData('order_id') !== $context['orderId']) {
                     $this->logger->warning('Coinify webhook rejected: payment_intent_id does not match orderId', [
@@ -213,6 +240,14 @@ class Notify extends Action implements CsrfAwareActionInterface
         }
     }
 
+    /**
+     * Handles a payment-intent.completed event.
+     *
+     * Sets the order to Processing, creates and registers a paid offline invoice,
+     * sends the invoice email to the customer, and attaches the cryptocurrency
+     * transaction details (amount, currency, blockchain transaction ID) as an
+     * order comment and customer note.
+     */
     private function handleCompleted(\Magento\Sales\Model\Order $order, array $context): void
     {
         $stateReason = $context['stateReason'] ?? '';

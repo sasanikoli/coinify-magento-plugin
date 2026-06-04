@@ -6,6 +6,13 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Backend\Block\Template\Context;
 
+/**
+ * Renders a read-only text field in the admin configuration page showing
+ * the full webhook URL the merchant needs to paste into their Coinify dashboard.
+ *
+ * The URL is constructed from the store's base URL, so it automatically
+ * reflects any domain changes without manual configuration.
+ */
 class WebhookUrl extends Field
 {
     private StoreManagerInterface $storeManager;

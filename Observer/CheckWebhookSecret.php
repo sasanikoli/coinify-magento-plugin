@@ -7,6 +7,17 @@ use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\App\RequestInterface;
 use Coinify\Payment\Model\Config as CoinifyConfig;
 
+/**
+ * Displays a persistent admin warning banner when the webhook secret is not set.
+ *
+ * Fires on every non-AJAX admin page load via controller_action_predispatch
+ * (registered in etc/adminhtml/events.xml). Using an observer rather than a
+ * system message notification ensures the warning appears on every page until
+ * the secret is configured, rather than only once as a one-time popup.
+ *
+ * AJAX requests are skipped to prevent the message accumulating in session
+ * storage on every background poll.
+ */
 class CheckWebhookSecret implements ObserverInterface
 {
     /** @var CoinifyConfig */

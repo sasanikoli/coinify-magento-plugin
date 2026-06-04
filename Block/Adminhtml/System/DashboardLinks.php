@@ -6,6 +6,13 @@ use Magento\Backend\Block\Template\Context;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Coinify\Payment\Model\Config as CoinifyConfig;
 
+/**
+ * Renders environment-aware links to the Coinify merchant dashboard
+ * in the admin configuration page.
+ *
+ * Points to app.sandbox.coinify.com when environment is sandbox,
+ * and app.coinify.com when in production.
+ */
 class DashboardLinks extends Field
 {
     /** @var CoinifyConfig */

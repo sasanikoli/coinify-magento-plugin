@@ -5,6 +5,13 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Store\Model\ScopeInterface;
 
+/**
+ * Central accessor for Coinify module configuration.
+ *
+ * All config values live under payment/coinify/ in core_config_data.
+ * Sensitive fields (api_key, webhook_secret) are stored encrypted via
+ * Magento's Encrypted backend model and decrypted on read here.
+ */
 class Config
 {
     public const XML_PATH_PAYMENT = 'payment/coinify/';
@@ -28,6 +35,7 @@ class Config
         return (string)$this->getValue('title', $storeId);
     }
 
+    /** Returns 'sandbox' or 'production'. */
     public function getEnvironment($storeId = null): string
     {
         return (string)$this->getValue('environment', $storeId);
@@ -43,14 +51,16 @@ class Config
         return $this->decryptValue((string)$this->getValue('webhook_secret', $storeId));
     }
 
+    /**
+     * Decrypts a config value if it is in Magento's encrypted format ("version:keyId:ciphertext").
+     * Plain-text values stored before encryption was introduced are returned as-is
+     * until the admin re-saves the configuration field.
+     */
     private function decryptValue(string $value): string
     {
         if (!$value) {
             return '';
         }
-        // Magento encrypted values follow the pattern "version:keyId:base64ciphertext".
-        // Plain-text values stored before this backend_model was added are returned as-is
-        // until the admin re-saves the configuration.
         if (preg_match('/^\d+:\d+:.+$/', $value)) {
             return (string)$this->encryptor->decrypt($value);
         }

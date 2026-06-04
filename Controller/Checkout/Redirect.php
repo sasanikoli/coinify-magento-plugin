@@ -10,6 +10,19 @@ use Psr\Log\LoggerInterface;
 use Magento\Framework\UrlInterface;
 use Coinify\Payment\Model\PaymentIntentFactory;
 
+/**
+ * Handles the checkout redirect to the Coinify payment window.
+ *
+ * After the customer places an order, this controller is called to:
+ * 1. Create a payment intent via the Coinify API.
+ * 2. Persist the intent record to the database.
+ * 3. Fetch the initial intent state (a second GET call, because the create
+ *    response does not always include a state field).
+ * 4. Validate the returned payment window URL against an allowlist, then
+ *    redirect the customer to it.
+ *
+ * On any failure the customer is sent back to the cart.
+ */
 class Redirect extends Action
 {
     private CheckoutSession $checkoutSession;
@@ -58,7 +71,8 @@ class Redirect extends Action
         try {
             $response = $this->client->createPaymentIntent($payload);
 
-            // persist intent
+            // Persist the intent immediately so webhook handlers can look it up
+            // by payment_intent_id or order_id as soon as they arrive.
             $intent = $this->intentFactory->create();
             $intent->setData([
                 'order_id' => $order->getIncrementId(),
@@ -75,7 +89,8 @@ class Redirect extends Action
                 $this->logger->error('Coinify: failed saving payment intent: ' . $e->getMessage());
             }
 
-            // Fetch full intent state if the create response did not include it
+            // The create response does not always include a state. Fetch it now
+            // so the order detail page shows the correct state from the start.
             $intentId = $response['id'] ?? null;
             if ($intentId && empty($response['state'])) {
                 try {
@@ -112,6 +127,10 @@ class Redirect extends Action
         return $resultRedirect;
     }
 
+    /**
+     * Ensures the payment window URL belongs to a known Coinify domain.
+     * Prevents an API compromise from redirecting customers to a phishing page.
+     */
     private function isAllowedPaymentWindowUrl(string $url): bool
     {
         $allowedPrefixes = [
