@@ -118,8 +118,7 @@ class Notify extends Action implements CsrfAwareActionInterface
         // allow an attacker to guess the secret one byte at a time.
         if (!$sigHeader || !hash_equals($computed, strtolower($sigHeader))) {
             $this->logger->warning('Coinify webhook rejected: invalid or missing signature', [
-                'computed' => $computed,
-                'header' => $sigHeader,
+                'received_signature' => $sigHeader,
             ]);
             $result->setHttpResponseCode(400);
             $result->setContents('invalid signature');
