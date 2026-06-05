@@ -1,0 +1,18 @@
+{
+    "name": "coinify/magento2-payment-tests",
+    "description": "Standalone test setup for the Coinify Magento 2 plugin. Not used for production installation — the main composer.json handles that. This file lets PHPUnit run without a full Magento installation by providing only phpunit and the plugin's own autoloading.",
+    "require": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Coinify\\Payment\\": "./"
+        },
+        "files": [
+            "Test/Unit/Stub/Stubs.php"
+        ]
+    },
+    "config": {
+        "vendor-dir": "vendor-test"
+    }
+}

@@ -1,3 +1,6 @@
 .DS_Store
 *.log
 /vendor/
+/vendor-test/
+composer-dev.lock
+.phpunit.result.cache

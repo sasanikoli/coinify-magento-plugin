@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Unit tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: [ "8.2", "8.3" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Install test dependencies
+        # Uses composer-dev.json — a lightweight standalone composer file that
+        # only requires phpunit and the plugin's own autoloading.
+        # The main composer.json requires Magento packages (repo.magento.com) and
+        # is not usable in CI without Magento credentials.
+        run: COMPOSER=composer-dev.json composer install --no-interaction --prefer-dist
+
+      - name: Run unit tests
+        run: vendor-test/bin/phpunit --testdox
