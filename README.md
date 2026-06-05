@@ -1,6 +1,6 @@
 # Coinify Payment Gateway for Magento 2
 
-Accept cryptocurrency payments in your Magento 2 store via [Coinify](https://www.coinify.com).
+Accept cryptocurrency payments in your Magento 2 store via [Coinify](https://www.coinify.com/payment-solutions#merchant-form).
 
 ## Requirements
 
@@ -81,6 +81,42 @@ php -d memory_limit=512M bin/magento cache:flush
 ```
 
 After any PHP file changes, re-run `setup:di:compile` and `cache:flush`. For template-only changes, `cache:flush` is sufficient.
+
+## Testing
+
+The plugin ships with a standalone unit test suite that runs without a Magento installation. Tests cover all security-critical paths and core business logic.
+
+### Running tests locally
+
+```bash
+# First time only — install PHPUnit (uses a separate composer file so
+# Magento packages are not required)
+COMPOSER=composer-dev.json composer install
+
+# Run the full suite
+vendor-test/bin/phpunit
+
+# Run with detailed output
+vendor-test/bin/phpunit --testdox
+```
+
+### What is tested
+
+| Test file | What it covers |
+|---|---|
+| `Test/Unit/Model/ConfigTest` | `decryptValue()` logic for empty / plaintext / Magento-encrypted values; all config getters |
+| `Test/Unit/Model/Api/ClientTest` | Sandbox vs production URL selection; `X-API-KEY` header presence/absence; GET vs POST dispatch |
+| `Test/Unit/Observer/CheckWebhookSecretTest` | Admin warning shown when secret is missing; not shown when set or plugin inactive; AJAX requests skipped |
+| `Test/Unit/Controller/Webhook/NotifyTest` | HTTP 400 when `webhook_secret` not configured; HTTP 400 on invalid HMAC signature; HTTP 400 on intent/order ID mismatch (IDOR guard); HTTP 200 for a valid webhook |
+| `Test/Unit/Controller/Checkout/RedirectTest` | URL allowlist accepts valid production and sandbox domains; rejects evil subdomain spoofing and plain HTTP; redirects to cart when no order in session |
+| `Test/Unit/Model/Service/RefundProcessorTest` | Refund record saved with state `initiated`; correct refund ID extracted from `merchantRefunds`; no record saved when API returns no refunds |
+| `Test/Unit/Model/Service/CreditMemoProcessorTest` | Full refund path (includes shipping amount); partial refund path (uses `adjustment_positive`); early return when `canCreditmemo()` is false |
+
+### CI
+
+Tests run automatically on every push and pull request to `main` via GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), tested against PHP 8.2 and 8.3.
+
+The CI workflow installs only PHPUnit (via `composer-dev.json`) — it does not require Magento or any Magento credentials.
 
 ## License
 
