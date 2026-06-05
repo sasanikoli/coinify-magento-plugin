@@ -4,9 +4,17 @@ Accept cryptocurrency payments in your Magento 2 store via [Coinify](https://www
 
 ## Requirements
 
-- Magento 2.4.x
-- PHP 7.4 or higher
-- A Coinify merchant account (sandbox or production)
+- **Magento 2.4.x** — not compatible with Magento 1.x or Magento 2.3.x and below
+- **PHP 8.1 or higher** — required by Magento 2.4.x (PHP 7.4 is end-of-life and unsupported)
+- **A Coinify merchant account** — sandbox or production; [sign up here](https://www.coinify.com/payment-solutions#merchant-form)
+
+**For local development** (setting up Magento from scratch):
+
+- **MySQL 8.0+** or MariaDB 10.6+
+- **Elasticsearch 7.x** or **OpenSearch 1.x** — required by Magento's catalog search
+- **Nginx or Apache**
+- **Composer 2.x**
+- **`repo.magento.com` credentials** — Magento's private Composer repository; generate a key pair at [commercedeveloper.adobe.com](https://commercedeveloper.adobe.com)
 
 ## Installation
 
