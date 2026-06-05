@@ -54,6 +54,8 @@ class Client
         $baseUrl = $environment === 'production' ? self::PRODUCTION_BASE_URL : self::SANDBOX_BASE_URL;
         $url = rtrim($baseUrl, '/') . $uri;
         $apiKey = $this->config->getApiKey();
+        $this->curl->setOption(CURLOPT_SSL_VERIFYPEER, true);
+        $this->curl->setOption(CURLOPT_SSL_VERIFYHOST, 2);
         $this->curl->addHeader('Content-Type', 'application/json');
         $this->curl->addHeader('Accept', 'application/json');
         if ($apiKey) {
